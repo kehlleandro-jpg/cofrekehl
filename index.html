@@ -1783,7 +1783,7 @@ async function getDica(){
   // Show loading modal
   S.modal={mode:'dica',loading:true,text:''};render();
 
-  const jarrStatus=(S.jarros||[]).map(j=>{
+  const jarrStatus=(S.jarros||[]).filter(j=>j.nome!=='Liberdade Financeira').map(j=>{
     const isLF=j.nome==='Liberdade Financeira';
     const jPct=isLF?(S.cfg.meta||0):(j.pct||0);
     const jAlocado=Math.round(rendaLiq*jPct/100);
