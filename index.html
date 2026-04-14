@@ -1799,42 +1799,4 @@ async function getDica(){
     return c.nome+' ('+pg+'/'+c.parcelas_total+')';
   }).join(', ');
 
-  const prompt=`Você é um consultor financeiro direto e prático. Com base nos dados abaixo, dê UMA dica financeira concreta e acionável para este mês. Máximo 3 frases. Sem introdução, sem "Olá", direto ao ponto. Não repita os números, fale sobre o que fazer.
-
-Dados do mês:
-- Renda líquida: R$${Math.round(rendaLiq)}
-- Gastos fixos: R$${Math.round(totalFixos)} | Variáveis: R$${Math.round(totalVar)}
-- Comprometido: ${pct}% da renda
-- Sobra real (após meta LF): R$${Math.round(sobra)}
-- Meta investimento: ${S.cfg.meta}% (R$${Math.round(metaVal)})
-- Jarros: ${jarrStatus}
-${parcelas?'- Parcelas ativas: '+parcelas:''}`;
-
-  try{
-    const res=await fetch('/.netlify/functions/dica',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt})
-    });
-    const data=await res.json();
-    const text=data.text||'Não foi possível gerar uma dica agora.';
-    S.modal={mode:'dica',loading:false,text};render();
-  }catch(e){
-    S.modal={mode:'dica',loading:false,text:'Erro ao conectar. Verifique sua conexão.'};render();
-  }
-}
-
-// ── Boot ──────────────────────────────────────────────
-loadState();
-checkNotif();
-if(getRoomId()){S.solo=false;startAutoSync();pullRoom().then(()=>render());}
-else{render();}
-</script>
-
-<script>
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/sw.js', {scope:'/'}).catch(()=>{});
-}
-</script>
-</body>
-</html>
+  const prompt=`Você é um consultor de hábitos de consumo, direto e prático. Com base nos dados abaixo, dê UMA dica prática sobre os gastos deste mês — olhando os jarros de Custos Fixos, Conforto, Prazeres ou Conhecimento. NUNCA mencione investimentos ou o jarro de Liberdade Financeira. Máximo 3 frases. Sem \"Olá\", direto ao ponto.
