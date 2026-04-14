@@ -1813,3 +1813,17 @@ Fixos: R$${Math.round(totalFixos)} | Variáveis: R$${Math.round(totalVar)} | ${p
   }
 }
 
+// ── Boot ──────────────────────────────────────────────
+loadState();
+checkNotif();
+if(getRoomId()){S.solo=false;startAutoSync();pullRoom().then(()=>render());}
+else{render();}
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js', {scope:'/'}).catch(()=>{});
+}
+</script>
+</body>
+</html>
