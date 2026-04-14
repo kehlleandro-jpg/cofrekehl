@@ -1777,26 +1777,39 @@ function checkNotif(){
 // ── Dica IA ──────────────────────────────────────────
 async function getDica(){
   const m=cur();
-  const {renda,rendaLiq,metaVal,totalFixos,totalVar,totalSaidas,sobra,pct}=calc(m);
+  const {renda,rendaLiq,totalFixos,totalVar,pct}=calc(m);
   if(!renda){showToast('Lance entradas primeiro');return;}
 
-  // Show loading modal
   S.modal={mode:'dica',loading:true,text:''};render();
 
   const jarrStatus=(S.jarros||[]).filter(j=>j.nome!=='Liberdade Financeira').map(j=>{
-    const isLF=j.nome==='Liberdade Financeira';
-    const jPct=isLF?(S.cfg.meta||0):(j.pct||0);
+    const jPct=j.pct||0;
     const jAlocado=Math.round(rendaLiq*jPct/100);
-    const gasto=isLF?0:(j.cats||[]).reduce((s,cat)=>{
+    const gasto=(j.cats||[]).reduce((s,cat)=>{
       return s+(m.contas||[]).filter(c=>c.categoria===cat).reduce((a,c)=>a+(parseFloat(c.valor)||0),0)
               +(m.variaveis||[]).filter(v=>v.categoria===cat).reduce((a,v)=>a+(parseFloat(v.valor)||0),0);
     },0);
-    return j.nome+': alocado R$'+Math.round(jAlocado)+', gasto R$'+Math.round(gasto);
-  }).join(' | ');
+    const status=gasto>jAlocado?'acima do limite':'dentro do limite';
+    return j.nome+': orçamento R$'+Math.round(jAlocado)+', gasto R$'+Math.round(gasto)+' ('+status+')';
+  }).join('\n');
 
-  const parcelas=(m.contas||[]).filter(c=>c.parcelas_total).map(c=>{
-    const pg=S.activeMonth-(c.parcela_mes_inicio||0)+1;
-    return c.nome+' ('+pg+'/'+c.parcelas_total+')';
-  }).join(', ');
+  const prompt=`Você é um consultor de hábitos de consumo, direto e prático. Analise os gastos abaixo por jarro e dê UMA dica prática e específica — foque no jarro com maior problema ou oportunidade de melhoria. Não mencione investimentos, poupança ou Liberdade Financeira. Máximo 3 frases curtas. Vá direto ao ponto.
 
-  const prompt=`Você é um consultor de hábitos de consumo, direto e prático. Com base nos dados abaixo, dê UMA dica prática sobre os gastos deste mês — olhando os jarros de Custos Fixos, Conforto, Prazeres ou Conhecimento. NUNCA mencione investimentos ou o jarro de Liberdade Financeira. Máximo 3 frases. Sem \"Olá\", direto ao ponto.
+Gastos do mês:
+${jarrStatus}
+Fixos: R$${Math.round(totalFixos)} | Variáveis: R$${Math.round(totalVar)} | ${pct}% da renda comprometido`;
+
+  try{
+    const res=await fetch('/.netlify/functions/dica',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt})
+    });
+    const data=await res.json();
+    const text=data.text||'Não foi possível gerar uma dica agora.';
+    S.modal={mode:'dica',loading:false,text};render();
+  }catch(e){
+    S.modal={mode:'dica',loading:false,text:'Erro ao conectar. Verifique sua conexão.'};render();
+  }
+}
+
