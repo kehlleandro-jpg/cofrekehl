@@ -1785,12 +1785,11 @@ async function getDica(){
   const jarrStatus=(S.jarros||[]).filter(j=>j.nome!=='Liberdade Financeira').map(j=>{
     const jPct=j.pct||0;
     const jAlocado=Math.round(rendaLiq*jPct/100);
-    const gasto=(j.cats||[]).reduce((s,cat)=>{
-      return s+(m.contas||[]).filter(c=>c.categoria===cat).reduce((a,c)=>a+(parseFloat(c.valor)||0),0)
-              +(m.variaveis||[]).filter(v=>v.categoria===cat).reduce((a,v)=>a+(parseFloat(v.valor)||0),0);
-    },0);
-    const status=gasto>jAlocado?'acima do limite':'dentro do limite';
-    return j.nome+': orçamento R$'+Math.round(jAlocado)+', gasto R$'+Math.round(gasto)+' ('+status+')';
+    const itens=[...(m.contas||[]),...(m.variaveis||[])].filter(c=>(j.cats||[]).includes(c.categoria));
+    const gasto=itens.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+    const status=gasto>jAlocado?'ACIMA do limite':'dentro do limite';
+    const itensList=itens.sort((a,b)=>b.valor-a.valor).slice(0,5).map(c=>c.nome+' R$'+Math.round(parseFloat(c.valor)||0)).join(', ');
+    return j.nome+': orçamento R$'+Math.round(jAlocado)+', gasto R$'+Math.round(gasto)+' ('+status+')'+(itensList?' — itens: '+itensList:'');
   }).join('\n');
 
   const prompt=`Você é um consultor de hábitos de consumo, direto e prático. Analise os gastos abaixo por jarro e dê UMA dica prática e específica — foque no jarro com maior problema ou oportunidade de melhoria. Não mencione investimentos, poupança ou Liberdade Financeira. Máximo 3 frases curtas. Vá direto ao ponto.
